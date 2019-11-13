@@ -34,8 +34,9 @@ public class RecInfCrawler {
                 Element lenguaje = document.select("html[lang]").first();
 
                 for(Element el : elementos) {
-                    if(lenguaje.attributes().get("lang").equals("es"))
+                    if(lenguaje.attributes().get("lang").equals("es") && !el.attributes().get("href").contains("?") && !el.attributes().get("href").contains(":") && !el.attributes().get("href").contains("#")) {
                         getPages(el.attr("abs:href"));
+                    }
                 }
 
             } catch (IOException e) {
