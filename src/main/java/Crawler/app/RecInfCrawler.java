@@ -8,51 +8,47 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class RecInfCrawler {
 
-    private HashSet<String> links;
+    private ArrayList<String> links;
+    private HashSet<String> linksVisitados = new HashSet<String>();
 
     public RecInfCrawler() {
-        links = new HashSet<String>();
+        links = new ArrayList<String>();
     }
 
     public void getPages(String URL) throws Exception {
-        //4. Check if you have already crawled the URLs 
-        //(we are intentionally not checking for duplicate content in this example)
-        if (!links.contains(URL)) {
-            try {
+        links.add(URL);
+        int i = 0;
+       try {
+        while(true) {
 
-                if (links.add(URL)) {
-                    System.out.println(URL);
-                }
+            Document document = Jsoup.connect(links.get(i)).get();
+            Elements elementos = document.select("a[href]");
+            Element lenguaje = document.select("html[lang]").first();
+            Element titulo = document.select("title").first();
 
-                //2. Fetch the HTML code
-                Document document = Jsoup.connect(URL).get();
-                //3. Parse the HTML to extract links to other URLs
-                Elements elementos = document.select("a[href]");
-                Element lenguaje = document.select("html[lang]").first();
-                Element titulo = document.select("title").first();
+            System.out.println(links.get(links.size() -1));
+            for (Element el : elementos) {
 
-                for(Element el : elementos) {
-                    if(lenguaje.attributes().get("lang").equals("es") && !el.attributes().get("href").contains("?") &&
-                     !el.attributes().get("href").contains(":") && !el.attributes().get("href").contains("#") && el.attributes().get("href").contains("wiki")) {
-
-                        File f = new File("./././HTML/" + titulo.text() + ".html");
-                        FileWriter writer = new FileWriter(f);
-                        writer.write(document.outerHtml());
-                        writer.close();
-
-                        getPages(el.attr("abs:href"));
-
-                    }
-                }
-
-            } catch (IOException e) {
-                System.err.println("For '" + URL + "': " + e.getMessage());
+                links.add(links.size() -1 , el.attr("abs:href"));
             }
+               
+            if(lenguaje.attributes().get("lang").equals("es") && !links.get(i).contains("?") 
+            && !links.get(i).contains(":") && !links.get(i).contains("#") && links.get(i).contains("wiki")) {
+                File f = new File("./././HTML/" + titulo.text() + ".html");
+                FileWriter writer = new FileWriter(f);
+                writer.write(document.outerHtml());
+                writer.close();
+            }
+            ++i;
         }
+       } catch(IOException e) {
+           e.printStackTrace();
+       }
     }
 
     public static void main(String[] args) throws Exception {
